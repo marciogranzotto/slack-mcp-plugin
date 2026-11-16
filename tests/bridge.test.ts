@@ -536,3 +536,47 @@ describe('Bridge - bootstrap DM restriction', () => {
     expect(mockMcp.notification).not.toHaveBeenCalled()
   })
 })
+
+describe('Bridge - permission prompt destination', () => {
+  const request = {
+    request_id: 'abcde',
+    tool_name: 'Bash',
+    description: 'list files',
+    input_preview: '{"command":"ls"}',
+  }
+
+  async function promptAfterChannelMention(permissionChannel?: string) {
+    const settings: Settings = {
+      gating: { mode: 'per-user', allowedUsers: ['U_ALLOWED'] },
+      watchedChannels: [],
+    }
+    const mockSlack = createMockSlackApp()
+    const bridge = new Bridge(mockSlack as any, new Gating(settings), settings, '', permissionChannel)
+    bridge.setMcpServer(createMockMcp() as any)
+
+    // Last activity: a mention inside a thread of a shared channel
+    await bridge.handleMention({
+      text: '<@BOTID> deploy',
+      user: 'U_ALLOWED',
+      channel: 'C_SHARED',
+      ts: '1234.5679',
+      thread_ts: '1234.5678',
+    })
+    await bridge.handlePermissionRequest(request)
+    return mockSlack.client.chat.postMessage as any
+  }
+
+  test('goes to the configured channel, not the last active channel or thread', async () => {
+    const postMessage = await promptAfterChannelMention('D_OWNER')
+    expect(postMessage).toHaveBeenCalledTimes(1)
+    const msg = postMessage.mock.calls[0][0]
+    expect(msg.channel).toBe('D_OWNER')
+    expect(msg.thread_ts).toBeUndefined()
+    expect(msg.text).toContain('abcde')
+  })
+
+  test('is dropped when no channel is configured', async () => {
+    const postMessage = await promptAfterChannelMention()
+    expect(postMessage).not.toHaveBeenCalled()
+  })
+})

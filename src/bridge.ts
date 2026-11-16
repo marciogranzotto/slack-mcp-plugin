@@ -62,6 +62,8 @@ export class Bridge {
     private gating: Gating,
     private settings: Settings,
     settingsPath: string = '',
+    // Channel for permission prompts (e.g. the owner's DM). Unset: prompts are dropped.
+    private permissionChannel: string = '',
   ) {
     this.settingsPath = settingsPath
   }
@@ -216,15 +218,19 @@ export class Bridge {
       console.error('[slack-channel] permission request dropped: no active context')
       return
     }
+    // The prompt shows the tool input, so it never goes to the last active channel.
+    if (!this.permissionChannel) {
+      console.error('[slack-channel] permission request dropped: SLACK_PERMISSION_CHANNEL is not set')
+      return
+    }
 
     const fallbackText =
       `Claude wants to run \`${params.tool_name}\`: ${params.description}\n` +
       `Reply \`yes ${params.request_id}\` or \`no ${params.request_id}\``
 
     await this.slackApp.client.chat.postMessage({
-      channel: this.lastActiveContext.channelId,
+      channel: this.permissionChannel,
       text: fallbackText,
-      thread_ts: this.lastActiveContext.threadTs,
       blocks: [
         {
           type: 'section',
