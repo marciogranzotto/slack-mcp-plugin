@@ -130,6 +130,8 @@ Add the `slack-channel` server entry to your `.mcp.json` alongside the existing 
 
 Alternatively, set `SLACK_BOT_TOKEN` and `SLACK_APP_TOKEN` as environment variables.
 
+Set `SLACK_PERMISSION_CHANNEL` to the channel ID that gets permission prompts, for example your DM with the bot. The prompts show tool input, so they never go to the last active channel; without this variable they are not sent to Slack.
+
 To pre-configure which Slack users are allowed to interact with the bot, create `~/.slack-channel/settings.json`:
 
 ```json

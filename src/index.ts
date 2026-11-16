@@ -30,7 +30,7 @@ const gating = new Gating(settings)
 const slackApp = createSlackApp(botToken, appToken)
 
 // Bridge is created without MCP reference. setMcpServer() wires it up after MCP is created.
-const bridge = new Bridge(slackApp, gating, settings, settingsPath)
+const bridge = new Bridge(slackApp, gating, settings, settingsPath, process.env.SLACK_PERMISSION_CHANNEL || '')
 const mcp = createMcpServer(bridge)
 bridge.setMcpServer(mcp)
 

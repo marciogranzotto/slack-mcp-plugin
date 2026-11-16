@@ -73,7 +73,7 @@ describe('End-to-end flow', () => {
     }
     const gating = new Gating(settings)
     const { mcp, slack } = createMocks()
-    const bridge = new Bridge(slack as any, gating, settings)
+    const bridge = new Bridge(slack as any, gating, settings, '', 'D_ALICE_DM')
     bridge.setMcpServer(mcp as any)
 
     // Set up active context via a DM
